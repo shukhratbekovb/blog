@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 
+from src.backend.api.v1.posts import router as posts_router
+from src.backend.api.v1.feed import router as feed_router
+from src.backend.api.v1.user import router as user_router
+
 # Создали обьект приложения FastAPI
 # это сердце нашего приложения
 app = FastAPI(
@@ -20,7 +24,12 @@ async def root():
 async def health_check():
     return {"status": "ok", "version": "0.1.0"}
 
+
 # uvicorn src.backend.main:app --reload
 # src.backend.main -> модуль пайтона в котором FastAPI приложение
 # app -> название обьекта FastAPI
 # --reload -> перезагрузка при измении файлов
+
+app.include_router(posts_router, prefix="/api/v1")
+app.include_router(feed_router, prefix="/api/v1")
+app.include_router(user_router, prefix="/api/v1")
