@@ -1,0 +1,26 @@
+from fastapi import FastAPI
+
+# Создали обьект приложения FastAPI
+# это сердце нашего приложения
+app = FastAPI(
+    title="DevTalks API",  # название приложение отображается в Swagger UI
+    description="Платформа для технических статей",  # Описание проекта можно использовать Markdown
+    version="0.1.0",
+    # docs_url="/docs", ссылка на Swagger
+    # redoc_url="/redoc", ссылка на ReDoc
+)
+
+
+@app.get("/")
+async def root():
+    return {"message": "DevTalks API is running"}
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "version": "0.1.0"}
+
+# uvicorn src.backend.main:app --reload
+# src.backend.main -> модуль пайтона в котором FastAPI приложение
+# app -> название обьекта FastAPI
+# --reload -> перезагрузка при измении файлов
