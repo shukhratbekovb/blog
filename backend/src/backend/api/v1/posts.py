@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from starlette import status
 
+from src.backend.schemas.pagination import PaginatedResponse
 from src.backend.api.v1.feed import FeedType
 
 router = APIRouter(
@@ -26,7 +27,8 @@ async def create_post():
 
 @router.get(
     "/",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    response_model=PaginatedResponse[PostBrief]
 )
 async def list_posts(
         page: int = 1,
