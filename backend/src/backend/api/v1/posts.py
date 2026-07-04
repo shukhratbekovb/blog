@@ -24,7 +24,6 @@ async def create_post():
     return {"msg": "post created"}
 
 
-
 @router.get(
     "/",
     status_code=status.HTTP_200_OK
@@ -46,23 +45,28 @@ async def list_posts(
     }
 
 
-@router.get("/popular")
-async def get_popular_posts():
-    return {"popular_posts": []}
-
-
 @router.get(
-    "/{post_id}",
+    "/{slug}",
     response_model=PostBrief
 )
-async def get_post(post_id: int):
+async def get_post(slug: str):
     return {
-        "id": post_id,
-        "title": f"Post: #{post_id}",
-        "slug": f"post_{post_id}",
+        "id": slug,
+        "title": f"Post: #{slug}",
+        "slug": f"post_{slug}",
         "hashed_password": "secret",
         "internal_id": 12345
     }
+
+
+@router.patch(
+    "/{post_id}"
+)
+async def update_post(
+        post_id: int,
+):
+    pass
+
 
 @router.delete(
     "/{post_id}",
@@ -70,3 +74,45 @@ async def get_post(post_id: int):
 )
 async def delete_post(post_id: int):
     return None
+
+
+@router.patch(
+    "/{post_id}/publish",
+)
+async def publish_post(
+        post_id: int,
+):
+    pass
+
+@router.post(
+    "/{post_id}/vote"
+)
+async def vote_post(
+        post_id: int,
+):
+    pass
+
+@router.delete(
+    "/{post_id}/vote"
+)
+async def unvote_post(
+        post_id: int,
+):
+    pass
+
+@router.post(
+    "/{post_id}/bookmark"
+)
+async def bookmark_post(
+        post_id: int,
+):
+    pass
+
+@router.delete(
+    "/{post_id}/bookmark"
+)
+async def unbookmark_post(
+        post_id: int,
+):
+    pass
+
