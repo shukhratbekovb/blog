@@ -15,8 +15,7 @@ class Post(TimeStampMixin, SlugMixin, Base):
         Text
     )
     author_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
-        ondelete="CASCADE"
+        ForeignKey("users.id", ondelete="CASCADE")
     )
     is_published: Mapped[bool] = mapped_column(
         default=False
@@ -29,5 +28,6 @@ class Post(TimeStampMixin, SlugMixin, Base):
     )
 
     author: Mapped["User"] = relationship(
-        back_populates="posts"
+        back_populates="posts",
+        lazy="selectin"
     )

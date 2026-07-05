@@ -1,6 +1,6 @@
 from pydantic import BaseModel, field_validator, model_validator
 
-from src.backend.schemas.user import validate_password
+from backend.schemas.user import validate_password
 
 
 class RefreshToken(BaseModel):

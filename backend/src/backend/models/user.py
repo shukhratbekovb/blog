@@ -1,5 +1,5 @@
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.models.base import Base
 from backend.models.mixins import TimeStampMixin
@@ -28,6 +28,7 @@ class User(TimeStampMixin, Base):
     is_active: Mapped[bool] = mapped_column(default=True)
     is_superuser: Mapped[bool] = mapped_column(default=False)
 
-    posts: Mapped[list["Post"]] = mapped_column(
-        back_populates="author"
+    posts: Mapped[list["Post"]] = relationship(
+        back_populates="author",
+        lazy="selectin"
     )

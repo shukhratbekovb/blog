@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
-from src.backend.schemas.pagination import PaginatedResponse
-from src.backend.schemas.tag import TagRead
-from src.backend.schemas.tag import TagCreate
+from backend.schemas.pagination import PaginatedResponse
+from backend.schemas.tag import TagRead
+from backend.schemas.tag import TagCreate
 
 router = APIRouter(
     prefix="/tags",

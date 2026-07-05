@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 
-from src.backend.api.v1.auth import router as auth_router
-from src.backend.api.v1.posts import router as posts_router
-from src.backend.api.v1.feed import router as feed_router
-from src.backend.api.v1.tags import router as tag_router
-from src.backend.api.v1.user import router as user_router
+from backend.api.v1.auth import router as auth_router
+from backend.api.v1.posts import router as posts_router
+from backend.api.v1.feed import router as feed_router
+from backend.api.v1.tags import router as tag_router
+from backend.api.v1.user import router as user_router
 
 # Создали обьект приложения FastAPI
 # это сердце нашего приложения
@@ -27,8 +27,8 @@ async def health_check():
     return {"status": "ok", "version": "0.1.0"}
 
 
-# uvicorn src.backend.main:app --reload
-# src.backend.main -> модуль пайтона в котором FastAPI приложение
+# uvicorn backend.main:app --reload
+# backend.main -> модуль пайтона в котором FastAPI приложение
 # app -> название обьекта FastAPI
 # --reload -> перезагрузка при измении файлов
 

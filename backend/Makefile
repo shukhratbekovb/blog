@@ -1,2 +1,4 @@
 dev:
-	poetry run uvicorn src.backend.main:app --reload
+	poetry run uvicorn backend.main:app --reload
+migrate:
+	poetry run alembic upgrade head

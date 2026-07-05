@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from src.backend.schemas.user import UserRead, UserBrief
-from src.backend.schemas.pagination import PaginatedResponse
+from backend.schemas.user import UserRead, UserBrief
+from backend.schemas.pagination import PaginatedResponse
 
 router = APIRouter(
     prefix="/users",

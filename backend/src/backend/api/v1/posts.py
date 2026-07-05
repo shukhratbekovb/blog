@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 from starlette import status
 
-from src.backend.schemas.post import PostCreate, PostBrief, PostRead, PostUpdate
-from src.backend.schemas.pagination import PaginatedResponse
-from src.backend.api.v1.feed import FeedType
+from backend.schemas.post import PostCreate, PostBrief, PostRead, PostUpdate
+from backend.schemas.pagination import PaginatedResponse
+from backend.api.v1.feed import FeedType
 
 router = APIRouter(
     prefix="/posts",

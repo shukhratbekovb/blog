@@ -2,8 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
-from src.backend.schemas.tag import TagRead
-from src.backend.schemas.user import UserBrief
+from backend.schemas.tag import TagRead
+from backend.schemas.user import UserBrief
 
 
 class PostBase(BaseModel):
