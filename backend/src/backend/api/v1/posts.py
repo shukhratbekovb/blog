@@ -1,7 +1,7 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
 from starlette import status
 
+from src.backend.schemas.post import PostCreate, PostBrief, PostRead, PostUpdate
 from src.backend.schemas.pagination import PaginatedResponse
 from src.backend.api.v1.feed import FeedType
 
@@ -11,17 +11,13 @@ router = APIRouter(
 )
 
 
-class PostBrief(BaseModel):
-    id: int
-    title: str
-    slug: str
-
-
 @router.post(
     "/",
     status_code=status.HTTP_201_CREATED
 )
-async def create_post():
+async def create_post(
+        body: PostCreate
+):
     return {"msg": "post created"}
 
 
@@ -49,7 +45,7 @@ async def list_posts(
 
 @router.get(
     "/{slug}",
-    response_model=PostBrief
+    response_model=PostRead
 )
 async def get_post(slug: str):
     return {
@@ -66,6 +62,7 @@ async def get_post(slug: str):
 )
 async def update_post(
         post_id: int,
+        body: PostUpdate
 ):
     pass
 
@@ -86,6 +83,7 @@ async def publish_post(
 ):
     pass
 
+
 @router.post(
     "/{post_id}/vote"
 )
@@ -93,6 +91,7 @@ async def vote_post(
         post_id: int,
 ):
     pass
+
 
 @router.delete(
     "/{post_id}/vote"
@@ -102,6 +101,7 @@ async def unvote_post(
 ):
     pass
 
+
 @router.post(
     "/{post_id}/bookmark"
 )
@@ -110,6 +110,7 @@ async def bookmark_post(
 ):
     pass
 
+
 @router.delete(
     "/{post_id}/bookmark"
 )
@@ -117,4 +118,3 @@ async def unbookmark_post(
         post_id: int,
 ):
     pass
-

@@ -1,30 +1,19 @@
-from pydantic import BaseModel, Field, EmailStr, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator
+
+from src.backend.schemas.user import validate_password
 
 
-class UserCreate(BaseModel):
-    username: str = Field(
-        min_length=3,
-        max_length=100,
-        pattern=r"^[a-zA-Z0-9-]+$"
-    )
-    email: EmailStr
-    password: str = Field(
-        min_length=8
-    )
+class RefreshToken(BaseModel):
+    refresh_token: str
 
-    @field_validator("password", mode="after")
-    @classmethod
-    def password_validator(cls, v: str):
-        errors = []
-        if not (any(c.islower() for c in v)):
-            errors.append("Хотя бы одна маленькая буква")
-        if not (any(c.isupper() for c in v)):
-            errors.append("Хотя бы одна заглавная буква")
-        if not (any(c.isdigit() for c in v)):
-            errors.append("Хотя бы одна цифра")
-        if errors:
-            raise ValueError(f"Пароль должен содержать: {', '.join(errors)}")
-        return v
+
+class Token(RefreshToken):
+    access_token: str
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
 
 
 class ChangePassword(BaseModel):
@@ -34,23 +23,10 @@ class ChangePassword(BaseModel):
     @field_validator("old_password", "new_password", mode="after")
     @classmethod
     def password_validator(cls, v: str):
-        errors = []
-        if not (any(c.islower() for c in v)):
-            errors.append("Хотя бы одна маленькая буква")
-        if not (any(c.isupper() for c in v)):
-            errors.append("Хотя бы одна заглавная буква")
-        if not (any(c.isdigit() for c in v)):
-            errors.append("Хотя бы одна цифра")
-        if errors:
-            raise ValueError(f"Пароль должен содержать: {', '.join(errors)}")
-        return v
+        return validate_password(v)
 
     @model_validator(mode="after")
     def password_match(self):
         if self.old_password == self.new_password:
             raise ValueError("Старый пароль не должен совпадать с новым")
         return self
-
-class UserBrief(BaseModel):
-    username: str
-    email: EmailStr

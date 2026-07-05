@@ -1,9 +1,30 @@
 from fastapi import APIRouter
 
+from src.backend.schemas.user import UserRead, UserBrief
+from src.backend.schemas.pagination import PaginatedResponse
+
 router = APIRouter(
     prefix="/users",
     tags=["users"],
 )
+
+
+@router.get(
+    "/",
+    response_model=PaginatedResponse[UserBrief]
+)
+async def list_users():
+    pass
+
+
+@router.get(
+    "/{user_id}",
+    response_model=UserRead
+)
+async def get_user(
+        user_id: int
+):
+    pass
 
 
 @router.get(

@@ -1,5 +1,8 @@
 from fastapi import APIRouter
 
+from src.backend.schemas.auth import UserLogin, ChangePassword, RefreshToken, Token
+from src.backend.schemas.user import UserCreate, UserUpdate, UserRead
+
 router = APIRouter(
     prefix="/auth",
     tags=["auth"]
@@ -7,23 +10,32 @@ router = APIRouter(
 
 
 @router.post(
-    "/register"
+    "/register",
+    response_model=UserRead
 )
-async def register_user():
+async def register_user(
+        body: UserCreate,
+):
     pass
 
 
 @router.post(
-    "/login"
+    "/login",
+    response_model=Token
 )
-async def login_user():
+async def login_user(
+        body: UserLogin,
+):
     pass
 
 
 @router.post(
-    "/refresh"
+    "/refresh",
+    response_model=Token
 )
-async def refresh_token():
+async def refresh_token(
+        body: RefreshToken
+):
     pass
 
 
@@ -37,5 +49,16 @@ async def get_me():
 @router.patch(
     "/me"
 )
-async def update_me():
+async def update_me(
+        body: UserUpdate,
+):
+    pass
+
+
+@router.post(
+    "/change-password"
+)
+async def change_password(
+        body: ChangePassword
+):
     pass
