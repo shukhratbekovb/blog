@@ -11,6 +11,6 @@ class Category(TimeStampMixin, SlugMixin, Base):
     name: Mapped[str] = mapped_column(String(100), unique=True)
     description: Mapped[str | None] = mapped_column(String(512))
 
-    posts: Mapped[list["Posts"]] = relationship(
+    posts: Mapped[list["Post"]] = relationship(
         back_populates="category",
     )
