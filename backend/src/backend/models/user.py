@@ -32,3 +32,9 @@ class User(TimeStampMixin, Base):
         back_populates="author",
         lazy="selectin"
     )
+    post_votes: Mapped[list["PostVote"]] = relationship(
+        back_populates="user",
+    )
+    bookmarks: Mapped[list["Bookmark"]] = relationship(
+        back_populates="user",
+    )
