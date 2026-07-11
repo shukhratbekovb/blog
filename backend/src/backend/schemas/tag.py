@@ -6,7 +6,6 @@ class TagBase(BaseModel):
         min_length=2,
         max_length=50
     )
-    slug: str | None = None
 
 
 class TagCreate(TagBase):
@@ -18,4 +17,5 @@ class TagRead(TagBase):
         from_attributes=True
     )
     id: int
+    slug: str
     posts_count: int = Field(default=0)

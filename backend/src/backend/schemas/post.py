@@ -15,31 +15,31 @@ class PostBase(BaseModel):
             "Как работа Pydantic?"
         ]
     )
-    slug: str = Field(
-        min_length=3,
-        max_length=220,
-        pattern=r"^[a-z0-9-]+$",
-        description="URL-friendly идентификатор"
-    )
+    # slug: str = Field(
+    #     min_length=3,
+    #     max_length=220,
+    #     pattern=r"^[a-z0-9-]+$",
+    #     description="URL-friendly идентификатор"
+    # )
 
-    @field_validator("slug", mode="after")
-    @classmethod
-    def slug_validator(cls, v: str):
-        if not v.islower():
-            raise ValueError("Слаг должен быть с маленькими буквами")
-        return v
+    # @field_validator("slug", mode="after")
+    # @classmethod
+    # def slug_validator(cls, v: str):
+    #     if not v.islower():
+    #         raise ValueError("Слаг должен быть с маленькими буквами")
+    #     return v
 
-    @field_validator("title", "slug", mode="after")
+    @field_validator("title", mode="after")
     @classmethod
     def no_leading_trailing_spaces(cls, v: str):
         return v.strip()
 
-    @field_validator("slug", mode="after")
-    @classmethod
-    def auto_generate_slug(cls, v: str):
-        if isinstance(v, str):
-            return v.lower().replace(" ", "-")
-        return v
+    # @field_validator("slug", mode="after")
+    # @classmethod
+    # def auto_generate_slug(cls, v: str):
+    #     if isinstance(v, str):
+    #         return v.lower().replace(" ", "-")
+    #     return v
 
 
 class PostCreate(PostBase):
@@ -55,12 +55,20 @@ class PostCreate(PostBase):
     is_published: bool = Field(
         default=False
     )
+    category_id: int = Field(
+        ge=1
+    )
 
 
 class PostUpdate(PostBase):
     content: str = Field(
         min_length=100,
         description="Содержимое поста в формате Markdown"
+    )
+    tag_ids: list[int] = Field(
+        default_factory=list,
+        max_length=5,
+        description="ID Тегов"
     )
     is_published: bool = Field(
         default=False

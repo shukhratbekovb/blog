@@ -62,3 +62,5 @@ async def change_password(
         body: ChangePassword
 ):
     pass
+
+
