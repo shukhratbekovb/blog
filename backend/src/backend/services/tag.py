@@ -50,3 +50,4 @@ class TagService:
         tag = await self.get_or_404(tag_id)
         await self.tag_repo.delete(tag)
         await self.session.commit()
+

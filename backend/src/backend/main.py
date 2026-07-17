@@ -6,6 +6,7 @@ from backend.api.v1.posts import router as posts_router
 from backend.api.v1.feed import router as feed_router
 from backend.api.v1.tags import router as tag_router
 from backend.api.v1.user import router as user_router
+from backend.api.v1.comments import router as comment_router
 
 # Создали обьект приложения FastAPI
 # это сердце нашего приложения
@@ -39,3 +40,4 @@ app.include_router(posts_router, prefix="/api/v1")
 app.include_router(feed_router, prefix="/api/v1")
 app.include_router(tag_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
+app.include_router(comment_router, prefix="/api/v1")
