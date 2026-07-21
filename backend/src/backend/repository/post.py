@@ -1,52 +1,36 @@
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from backend.models import Post, Tag
+from backend.repository.base import BaseRepository
+from backend.repository.mixins import (
+    AddRepositoryMixin,
+    RetrieveRepositoryMixin,
+    UpdateRepositoryMixin,
+    DeleteRepositoryMixin,
+    ListRepositoryMixin
+)
 
 
-class PostRepository:
-    def __init__(self, session: AsyncSession):
-        self.session = session
-
-    def _base_query(self):
-        return select(Post).options(
-            selectinload(Post.author),
-            selectinload(Post.category),
-            selectinload(Post.tags)
-        )
-
-    async def add(self, post: Post) -> Post:
-        self.session.add(post)
-        await self.session.flush()
-        await self.session.refresh(post)
-        return post
-
-    async def get_by_id(self, post_id: int) -> Post | None:
-        stmt = self._base_query().where(Post.id == post_id)
-        result = await self.session.execute(stmt)
-        post = result.scalar_one_or_none()
-        return post
+class PostRepository(
+    BaseRepository[Post],
+    AddRepositoryMixin[Post],
+    RetrieveRepositoryMixin[Post],
+    UpdateRepositoryMixin[Post],
+    DeleteRepositoryMixin[Post],
+    ListRepositoryMixin[Post],
+):
+    base_query = select(Post).options(
+        selectinload(Post.author),
+        selectinload(Post.category),
+        selectinload(Post.tags)
+    )
 
     async def get_by_slug(self, slug: str) -> Post | None:
-        stmt = self._base_query().where(Post.slug == slug)
+        stmt = self.base_query.where(Post.slug == slug)
         result = await self.session.execute(stmt)
         post = result.scalar_one_or_none()
         return post
-
-    async def get_all(self):
-        stmt = self._base_query()
-        result = await self.session.execute(stmt)
-        posts = result.scalars().all()
-        return posts
-
-    async def delete(self, post: Post) -> None:
-        await self.session.delete(post)
-        await self.session.flush()
-
-    async def update(self, post: Post) -> None:
-        await self.session.merge(post)
-        await self.session.flush()
 
     async def get_tags_by_ids(
             self,

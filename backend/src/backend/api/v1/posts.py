@@ -1,10 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from starlette import status
 
-from backend.dependencies.post import PostServiceDep
-from backend.schemas.post import PostCreate, PostBrief, PostRead, PostUpdate
-from backend.schemas.pagination import PaginatedResponse
-from backend.api.v1.feed import FeedType
+from backend.dependencies.post import PostServiceDep, CurrentPostDep
+from backend.schemas.post import PostCreate, PostBrief, PostRead, PostUpdate, PostFilters
+from backend.schemas.pagination import Page, PaginationParams
 
 router = APIRouter(
     prefix="/posts",
@@ -29,17 +28,17 @@ async def create_post(
 @router.get(
     "/",
     status_code=status.HTTP_200_OK,
-    response_model=PaginatedResponse[PostBrief]
+    response_model=Page[PostBrief]
 )
 async def list_posts(
         service: PostServiceDep,
-        page: int = 1,
-        size: int = 10,
-        q: str | None = None,
-        tag: str | None = None,
-        feed: FeedType = FeedType.new,
+        filters: PostFilters = Depends(),
+        pagination: PaginationParams = Depends(),
 ):
-    posts = await service.get_all()
+    posts = await service.get_all(
+        filters,
+        pagination,
+    )
     return posts
 
 
@@ -82,8 +81,10 @@ async def delete_post(
 )
 async def publish_post(
         post_id: int,
+        post: CurrentPostDep,
+        service: PostServiceDep
 ):
-    pass
+    await service.publish(AUTHOR_ID, post)
 
 
 @router.post(

@@ -4,6 +4,7 @@ from starlette import status
 
 from backend.models import Tag
 from backend.repository.tag import TagRepository
+from backend.schemas.pagination import PaginationParams
 from backend.schemas.tag import TagCreate
 from backend.utils.slug import slug_generator
 
@@ -17,8 +18,13 @@ class TagService:
         self.session = session
         self.tag_repo = tag_repo
 
-    async def get_all(self) -> list[Tag]:
-        tags = self.tag_repo.get_all()
+    async def get_all(
+            self,
+            pagination: PaginationParams,
+    ):
+        tags = self.tag_repo.get_all(
+            pagination=pagination
+        )
         return tags
 
     async def get_or_404(self, tag_id: int) -> Tag:

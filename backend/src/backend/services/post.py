@@ -5,7 +5,8 @@ from starlette import status
 from backend.models import Post
 from backend.repository.post import PostRepository
 from backend.repository.tag import TagRepository
-from backend.schemas.post import PostCreate, PostUpdate
+from backend.schemas.pagination import PaginationParams
+from backend.schemas.post import PostCreate, PostUpdate, PostFilters
 from backend.utils.slug import slug_generator
 
 
@@ -121,6 +122,23 @@ class PostService:
         await self.session.commit()
         return post
 
-    async def get_all(self) -> list[Post]:
-        posts = await self.post_repo.get_all()
+    async def get_all(
+            self,
+            filters: PostFilters,
+            pagination: PaginationParams
+    ):
+        posts = await self.post_repo.get_all(
+            filters=filters,
+            pagination=pagination
+        )
         return posts
+
+    async def publish(self, current_user_id: int, post: Post):
+        if post.author_id != current_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='You can only publish your own posts'
+            )
+        post.is_published = True
+        await self.post_repo.update(post)
+        await self.session.commit()
