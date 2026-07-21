@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 
+from backend.dependencies.auth import get_current_user, verify_superuser
 from backend.dependencies.tag import TagServiceDep
 from backend.schemas.pagination import Page, PaginationParams
 from backend.schemas.tag import TagRead
@@ -12,7 +13,8 @@ router = APIRouter(
 
 
 @router.post(
-    "/"
+    "/",
+    dependencies=[Depends(get_current_user)]
 )
 async def create_tag(
         body: TagCreate,
@@ -50,6 +52,7 @@ async def get_tag(
 
 @router.delete(
     "/{tag_id}",
+    dependencies=[Depends(verify_superuser)]
 )
 async def delete_tag(
         tag_id: int,

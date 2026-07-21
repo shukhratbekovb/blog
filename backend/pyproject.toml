@@ -17,7 +17,10 @@ dependencies = [
     "psycopg2-binary (>=2.9.12,<3.0.0)",
     "greenlet (>=3.5.3,<4.0.0)",
     "alembic (>=1.18.5,<2.0.0)",
-    "transliterate (>=1.10.2,<2.0.0)"
+    "transliterate (>=1.10.2,<2.0.0)",
+    "python-jose[cryptography] (>=3.5.0,<4.0.0)",
+    "passlib[bcrypt] (>=1.7.4,<2.0.0)",
+    "argon2-cffi (>=25.1.0,<26.0.0)"
 ]
 
 [tool.poetry]

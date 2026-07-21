@@ -19,6 +19,7 @@ class CategoryRepository(
     DeleteRepositoryMixin[Category],
     ListRepositoryMixin[Category],
 ):
+    model = Category
     base_query = select(Category)
 
     async def get_by_slug(

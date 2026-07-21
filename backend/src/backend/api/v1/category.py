@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from starlette import status
 
+from backend.dependencies.auth import verify_superuser
 from backend.dependencies.category import CategoryServiceDep
 from backend.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
 
@@ -13,7 +14,8 @@ router = APIRouter(
 @router.post(
     "/",
     status_code=status.HTTP_201_CREATED,
-    response_model=CategoryRead
+    response_model=CategoryRead,
+    dependencies=[Depends(verify_superuser)]
 )
 async def create_category(
         body: CategoryCreate,
@@ -45,9 +47,11 @@ async def get_category(
     category = await service.get_or_404(category_slug)
     return category
 
+
 @router.put(
     "/{category_id}",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(verify_superuser)]
 )
 async def update_category(
         category_id: int,
@@ -56,9 +60,11 @@ async def update_category(
 ):
     await service.update(category_id, body)
 
+
 @router.delete(
     "/{category_id}",
-    status_code=status.HTTP_204_NO_CONTENT
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(verify_superuser)]
 )
 async def delete_category(
         category_id: int,
