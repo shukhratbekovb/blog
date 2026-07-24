@@ -29,7 +29,8 @@ class UserBase(BaseModel):
     )
 
     @field_validator("username", mode="after")
-    def to_lowercase_username(self, v: str):
+    @classmethod
+    def to_lowercase_username(cls, v: str):
         return v.lower()
 
 

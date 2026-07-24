@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from backend.core.cache import CacheService, CacheServiceDep
 from backend.dependencies.auth import UserRepoDep
 from backend.dependencies.bookmark import BookmarkRepoDep
 from backend.dependencies.database import SessionDep
@@ -42,7 +43,8 @@ async def get_post_service(
         tag_repo: TagRepoDep,
         user_repo: UserRepoDep,
         post_vote_repo: PostVoteRepoDep,
-        bookmark_repo: BookmarkRepoDep
+        bookmark_repo: BookmarkRepoDep,
+        cache_service: CacheServiceDep
 ) -> PostService:
     return PostService(
         session=session,
@@ -50,7 +52,8 @@ async def get_post_service(
         tag_repo=tag_repo,
         user_repo=user_repo,
         post_vote_repo=post_vote_repo,
-        bookmark_repo=bookmark_repo
+        bookmark_repo=bookmark_repo,
+        cache_service=cache_service
     )
 
 
