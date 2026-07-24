@@ -6,7 +6,7 @@ from backend.core.security import hash_password, verify_password, create_access_
 from backend.models import User
 from backend.repository.user import UserRepository
 from backend.schemas.auth import UserLogin, Token, RefreshToken, ChangePassword
-from backend.schemas.user import UserCreate, UserUpdate
+from backend.schemas.user import UserCreate
 
 
 class AuthService:
@@ -113,34 +113,3 @@ class AuthService:
         await self.user_repo.update(user)
         await self.session.commit()
 
-    async def update_me(
-            self,
-            user: User,
-            body: UserUpdate
-    ) -> None:
-        # vladislav
-        # vladislav@example.com
-
-        # vladislav
-        # vladislav@example.com
-
-        exists_username = await self.user_repo.get_by_username(body.username)
-        if exists_username and exists_username.username != user.username:
-            raise HTTPException(
-                status_code=409,
-                detail="User with that username already exists"
-            )
-        # Есть ли такой email в БД
-        exists_email = await self.user_repo.get_by_email(body.email)
-        if exists_email and exists_email.email != user.email:
-            raise HTTPException(
-                status_code=409,
-                detail="User with that email already exists"
-            )
-
-        user.username = body.username
-        user.email = body.email
-        user.bio = body.bio
-
-        await self.user_repo.update(user)
-        await self.session.commit()

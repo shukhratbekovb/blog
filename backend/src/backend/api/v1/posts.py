@@ -3,7 +3,7 @@ from starlette import status
 
 from backend.dependencies.auth import CurrentUserDep
 from backend.dependencies.post import PostServiceDep, CurrentPostDep
-from backend.schemas.post import PostCreate, PostBrief, PostRead, PostUpdate, PostFilters
+from backend.schemas.post import PostCreate, PostBrief, PostUpdate, PostFilters, PostRead
 from backend.schemas.pagination import Page, PaginationParams
 
 router = APIRouter(
@@ -95,8 +95,11 @@ async def publish_post(
 )
 async def vote_post(
         post_id: int,
+        post: CurrentPostDep,
+        current_user: CurrentUserDep,
+        service: PostServiceDep
 ):
-    pass
+    await service.vote_post(post, current_user)
 
 
 @router.delete(
@@ -104,8 +107,11 @@ async def vote_post(
 )
 async def unvote_post(
         post_id: int,
+        post: CurrentPostDep,
+        current_user: CurrentUserDep,
+        service: PostServiceDep
 ):
-    pass
+    await service.unvote_post(post, current_user)
 
 
 @router.post(
@@ -113,8 +119,11 @@ async def unvote_post(
 )
 async def bookmark_post(
         post_id: int,
+        post: CurrentPostDep,
+        current_user: CurrentUserDep,
+        service: PostServiceDep
 ):
-    pass
+    await service.add_bookmark(post, current_user)
 
 
 @router.delete(
@@ -122,5 +131,8 @@ async def bookmark_post(
 )
 async def unbookmark_post(
         post_id: int,
+        post: CurrentPostDep,
+        current_user: CurrentUserDep,
+        service: PostServiceDep
 ):
-    pass
+    await service.remove_bookmark(post, current_user)

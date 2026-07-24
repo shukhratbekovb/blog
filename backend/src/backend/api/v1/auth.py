@@ -3,7 +3,7 @@ from starlette import status
 
 from backend.dependencies.auth import AuthServiceDep, CurrentUserDep
 from backend.schemas.auth import UserLogin, ChangePassword, RefreshToken, Token
-from backend.schemas.user import UserCreate, UserUpdate, UserRead
+from backend.schemas.user import UserCreate, UserRead
 
 router = APIRouter(
     prefix="/auth",
@@ -45,27 +45,6 @@ async def refresh_token(
 ):
     token = await service.refresh(body)
     return token
-
-
-@router.get(
-    "/me",
-    response_model=UserRead
-)
-async def get_me(
-        current_user: CurrentUserDep
-):
-    return current_user
-
-
-@router.patch(
-    "/me"
-)
-async def update_me(
-        body: UserUpdate,
-        current_user: CurrentUserDep,
-        service: AuthServiceDep
-):
-    await service.update_me(current_user, body)
 
 
 @router.post(

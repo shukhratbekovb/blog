@@ -15,7 +15,8 @@ router = APIRouter(
     "/",
     status_code=status.HTTP_201_CREATED,
     response_model=CategoryRead,
-    dependencies=[Depends(verify_superuser)]
+
+
 )
 async def create_category(
         body: CategoryCreate,
