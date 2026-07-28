@@ -1,0 +1,260 @@
+from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
+
+from backend.core.cache import CacheService
+from backend.models import Post, User, PostVote, Bookmark
+from backend.repository.bookmark import BookmarkRepository
+from backend.repository.post import PostRepository
+from backend.repository.post_vote import PostVoteRepository
+from backend.repository.tag import TagRepository
+from backend.repository.user import UserRepository
+from backend.schemas.pagination import PaginationParams
+from backend.schemas.post import PostCreate, PostUpdate, PostFilters, PostRead
+from backend.utils.slug import slug_generator
+
+
+class PostService:
+    def __init__(
+            self,
+            session: AsyncSession,
+            post_repo: PostRepository,
+            tag_repo: TagRepository,
+            post_vote_repo: PostVoteRepository,
+            user_repo: UserRepository,
+            bookmark_repo: BookmarkRepository,
+            cache_service: CacheService
+    ):
+        self.session = session
+        self.post_repo = post_repo
+        self.tag_repo = tag_repo
+        self.post_vote_repo = post_vote_repo
+        self.user_repo = user_repo
+        self.bookmark_repo = bookmark_repo
+        self.cache_service = cache_service
+
+    async def _make_unique_slug(self, base_slug: str) -> str:
+        slug = base_slug
+        counter = 1
+        while await self.post_repo.get_by_slug(slug):
+            slug = f'{base_slug}-{counter}'
+            counter += 1
+        return slug
+
+    async def create(
+            self,
+            body: PostCreate,
+            author_id: int
+    ) -> Post:
+        base_slug = slug_generator.generate(body.title)
+        slug = await self._make_unique_slug(base_slug)
+
+        tags = await self.post_repo.get_tags_by_ids(body.tag_ids)
+
+        post = Post(
+            title=body.title,
+            slug=slug,
+            content=body.content,
+            author_id=author_id,
+            category_id=body.category_id,
+            is_published=body.is_published,
+            tags=tags
+        )
+        post = await self.post_repo.add(post)
+        for tag in tags:
+            await self.tag_repo.sync_posts_count(tag.id)
+
+        await self.session.commit()
+
+        await self.cache_service.delete_pattern("posts:list:*")
+
+        return post
+
+    async def update(
+            self,
+            post_id: int,
+            body: PostUpdate,
+            current_user_id: int
+    ) -> None:
+        post = await self.get_or_404(post_id)
+
+        if post.author_id != current_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='You can only edit your own posts'
+            )
+
+        update_data = body.model_dump(exclude_unset=True)
+
+        if "title" in update_data:
+            base_slug = slug_generator.generate(update_data["title"])
+            update_data["slug"] = await self._make_unique_slug(base_slug)
+
+        if "tag_ids" in update_data:
+            tag_ids = update_data.pop("tag_ids")
+            post.tags = await self.post_repo.get_tags_by_ids(tag_ids or [])
+
+        for field, value in update_data.items():
+            setattr(post, field, value)
+
+        await self.post_repo.update(post)
+        await self.session.commit()
+        await self.cache_service.delete_pattern("posts:list:*")
+        await self.cache_service.delete(f"posts:detail:{post_id}")
+
+    # posts:detail:42
+
+    async def get_or_404(self, post_id: int) -> Post:
+        cached_post = await self.cache_service.get(f"posts:detail:{post_id}")
+        if cached_post:
+            return cached_post
+
+        post = await self.post_repo.get_by_id(post_id)
+
+        if not post:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='Post not found'
+            )
+
+        await self.cache_service.set(f"posts:detail:{post_id}", PostRead.model_validate(post).model_dump())
+
+        return post
+
+    async def delete(
+            self,
+            post_id: int,
+            current_user_id: int
+    ) -> None:
+        post = await self.get_or_404(post_id)
+        if post.author_id != current_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='You can only delete your own posts'
+            )
+        await self.post_repo.delete(post)
+        await self.session.commit()
+
+    async def view_or_404(self, slug: str) -> Post:
+        post = await self.post_repo.get_by_slug(slug)
+        if not post or not post.is_published:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='Post not found'
+            )
+        await self.post_repo.increment_views(post)
+        await self.session.commit()
+        return post
+
+    def _post_list_key(
+            self,
+            filters: PostFilters,
+            pagination: PaginationParams
+    ) -> str:
+        return (
+            f"posts:list:"
+            f"page={pagination.page}:"
+            f"size={pagination.size}:"
+            f"q={filters.q}:"
+            f"category_id={filters.category_id}:"
+            f"author_id={filters.author_id}:"
+            f"date_from={filters.date_from}:"
+            f"date_to={filters.date_to}"
+        )
+
+    async def get_all(
+            self,
+            filters: PostFilters,
+            pagination: PaginationParams
+    ):
+        cache_key = self._post_list_key(filters, pagination)
+        cached_posts = await self.cache_service.get(cache_key)
+        if cached_posts:
+            return cached_posts
+
+        posts = await self.post_repo.get_all(
+            filters=filters,
+            pagination=pagination
+        )
+        await self.cache_service.set(cache_key, posts.model_dump())
+        return posts
+
+    async def publish(self, current_user_id: int, post: Post):
+        if post.author_id != current_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='You can only publish your own posts'
+            )
+        post.is_published = True
+        await self.post_repo.update(post)
+        await self.session.commit()
+
+    async def vote_post(
+            self,
+            post: Post,
+            user: User
+    ):
+        # проверить есть ли его голос или нет
+        post_vote = await self.post_vote_repo.get_vote_by_post_user(post.id, user.id)
+        if post_vote:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail='Ты уже проголосовал'
+            )
+        post_vote = PostVote(
+            post_id=post.id,
+            user_id=user.id
+        )
+        author = await self.user_repo.get_by_id(post.author_id)
+        author.karma += 1
+        await self.post_vote_repo.add(post_vote)
+        await self.user_repo.update(author)
+        await self.session.commit()
+
+    async def unvote_post(
+            self,
+            post: Post,
+            user: User
+    ):
+        # проверить есть ли его голос или нет
+        post_vote = await self.post_vote_repo.get_vote_by_post_user(post.id, user.id)
+        if not post_vote:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='Ты еще не проголосовал'
+            )
+        author = await self.user_repo.get_by_id(post.author_id)
+        author.karma -= 1
+        await self.post_vote_repo.delete(post_vote)
+        await self.user_repo.update(author)
+        await self.session.commit()
+
+    async def add_bookmark(
+            self,
+            post: Post,
+            user: User
+    ):
+        # проверить есть ли его голос или нет
+        bookmark = await self.bookmark_repo.get_bookmark_by_post_user(post.id, user.id)
+        if bookmark:
+            return
+        bookmark = Bookmark(
+            post_id=post.id,
+            user_id=user.id
+        )
+        await self.bookmark_repo.add(bookmark)
+        await self.session.commit()
+
+    async def remove_bookmark(
+            self,
+            post: Post,
+            user: User
+    ):
+        bookmark = await self.bookmark_repo.get_bookmark_by_post_user(post.id, user.id)
+        if not bookmark:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='Bookmark not found'
+            )
+        await self.bookmark_repo.delete(bookmark)
+        await self.session.commit()

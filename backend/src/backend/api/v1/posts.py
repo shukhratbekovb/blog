@@ -1,0 +1,138 @@
+from fastapi import APIRouter, Depends
+from starlette import status
+
+from backend.dependencies.auth import CurrentUserDep
+from backend.dependencies.post import PostServiceDep, CurrentPostDep
+from backend.schemas.post import PostCreate, PostBrief, PostUpdate, PostFilters, PostRead
+from backend.schemas.pagination import Page, PaginationParams
+
+router = APIRouter(
+    prefix="/posts",
+    tags=["Posts"],
+)
+
+
+@router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED
+)
+async def create_post(
+        body: PostCreate,
+        current_user: CurrentUserDep,
+        service: PostServiceDep
+):
+    post = await service.create(body, current_user.id)
+    return post
+
+
+@router.get(
+    "/",
+    status_code=status.HTTP_200_OK,
+    response_model=Page[PostBrief]
+)
+async def list_posts(
+        service: PostServiceDep,
+        filters: PostFilters = Depends(),
+        pagination: PaginationParams = Depends(),
+):
+    posts = await service.get_all(
+        filters,
+        pagination,
+    )
+    return posts
+
+
+@router.get(
+    "/{slug}",
+    response_model=PostRead
+)
+async def get_post(
+        slug: str,
+        service: PostServiceDep
+):
+    post = await service.view_or_404(slug)
+    return post
+
+
+@router.patch(
+    "/{post_id}"
+)
+async def update_post(
+        post_id: int,
+        body: PostUpdate,
+        current_user: CurrentUserDep,
+        service: PostServiceDep
+):
+    await service.update(post_id, body, current_user.id)
+
+
+@router.delete(
+    "/{post_id}",
+    status_code=status.HTTP_204_NO_CONTENT
+)
+async def delete_post(
+        post_id: int,
+        current_user: CurrentUserDep,
+        service: PostServiceDep
+):
+    await service.delete(post_id, current_user.id)
+
+
+@router.patch(
+    "/{post_id}/publish",
+)
+async def publish_post(
+        post_id: int,
+        post: CurrentPostDep,
+        current_user: CurrentUserDep,
+        service: PostServiceDep
+):
+    await service.publish(current_user.id, post)
+
+
+@router.post(
+    "/{post_id}/vote"
+)
+async def vote_post(
+        post_id: int,
+        post: CurrentPostDep,
+        current_user: CurrentUserDep,
+        service: PostServiceDep
+):
+    await service.vote_post(post, current_user)
+
+
+@router.delete(
+    "/{post_id}/vote"
+)
+async def unvote_post(
+        post_id: int,
+        post: CurrentPostDep,
+        current_user: CurrentUserDep,
+        service: PostServiceDep
+):
+    await service.unvote_post(post, current_user)
+
+
+@router.post(
+    "/{post_id}/bookmark"
+)
+async def bookmark_post(
+        post_id: int,
+        post: CurrentPostDep,
+        current_user: CurrentUserDep,
+        service: PostServiceDep
+):
+    await service.add_bookmark(post, current_user)
+
+
+@router.delete(
+    "/{post_id}/bookmark"
+)
+async def unbookmark_post(
+        post_id: int,
+        post: CurrentPostDep,
+        current_user: CurrentUserDep,
+        service: PostServiceDep
+):
+    await service.remove_bookmark(post, current_user)
